@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex Pro - Competitive Edition</title>
+    <style>
+        :root {
+            --pk-red: #ff1f1f;
+            --pk-dark: #121212;
+            --pk-card: #1e1e1e;
+            --gold: #ffcc00;
+            --blue: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f0f0f;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            color: #e0e0e0;
+            margin: 0;
+        }
+
+        .pokedex-container {
+            background-color: var(--pk-red);
+            width: 100%;
+            max-width: 480px;
+            border-radius: 25px;
+            border: 10px solid #8b0000;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            background: #fff;
+            color: #333;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 12px;
+            background: var(--pk-dark);
+            color: white;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+
+        button:active { transform: scale(0.95); }
+
+        .main-screen {
+            background: var(--pk-dark);
+            border-radius: 15px;
+            padding: 20px;
+            border: 4px solid #333;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Esconder scrollbar */
+        .main-screen::-webkit-scrollbar { width: 5px; }
+        .main-screen::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+
+        .pk-header { text-align: center; margin-bottom: 15px; }
+        .pk-name { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; color: white; }
+        
+        #pk-image {
+            width: 160px;
+            height: 160px;
+            display: block;
+            margin: 0 auto;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        .type-pill {
+            display: inline-block;
+            padding: 5px 15px;
+            margin: 5px 3px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: white;
+        }
+
+        /* Tipos de Cores */
+        .normal { background: #A8A878; } .fire { background: #F08030; } .water { background: #6890F0; }
+        .grass { background: #78C850; } .electric { background: #F8D030; } .ice { background: #98D8D8; }
+        .fighting { background: #C03028; } .poison { background: #A040A0; } .ground { background: #E0C068; }
+        .flying { background: #A890F0; } .psychic { background: #F85888; } .bug { background: #A8B020; }
+        .rock { background: #B8A038; } .ghost { background: #705898; } .dragon { background: #7038F8; }
+        .dark { background: #705848; } .steel { background: #B8B8D0; } .fairy { background: #EE99AC; }
+
+        .section-box {
+            background: var(--pk-card);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid #333;
+        }
+
+        .section-title {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .stat-total { color: var(--gold); font-weight: bold; border: none; padding-top: 8px; }
+
+        .eff-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            margin: 2px;
+            font-size: 11px;
+            color: white;
+        }
+        .x4 { background: #ff0000; border: 1px solid white; }
+        .x2 { background: #cc2222; }
+        .x05 { background: #4e8234; }
+        .x025 { background: #264219; }
+        .x0 { background: #000; border: 1px solid #555; }
+
+        .move-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .move-card {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            text-align: center;
+            border-left: 4px solid var(--blue);
+        }
+
+        .item-suggest {
+            color: var(--gold);
+            font-style: italic;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .evo-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .evo-step { text-align: center; cursor: pointer; transition: 0.2s; }
+        .evo-step:hover { transform: translateY(-5px); }
+        .evo-step img { width: 65px; background: #252525; border-radius: 50%; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="pokedex-container">
+    <div class="search-section">
+        <input type="text" id="pkInput" placeholder="Pikachu ou 25">
+        <button onclick="buscar()">GO!</button>
+    </div>
+
+    <div id="loading" class="hidden" style="text-align: center;">Buscando dados na PokéAPI...</div>
+
+    <div id="mainScreen" class="main-screen hidden">
+        <div class="pk-header">
+            <p id="pk-id" style="color: var(--gold); margin: 0; font-weight: bold;"></p>
+            <h1 id="pk-name" class="pk-name"></h1>
+            <div id="type-container"></div>
+        </div>
+
+        <img id="pk-image" src="" alt="Pokemon">
+        
+        <div style="display: flex; gap: 5px;">
+            <button onclick="alternarShiny()" style="flex: 1; background: #444; font-size: 12px;">SHINY MODE</button>
+            <button onclick="toggleMoves()" style="flex: 1; background: var(--blue); font-size: 12px;">MOVESET / ITEM</button>
+        </div>
+
+        <div class="section-box">
+            <div class="section-title">Habilidades</div>
+            <div id="ability-list" style="font-size: 14px; font-weight: bold;"></div>
+        </div>
+
+        <div id="moveset-section" class="section-box hidden">
+            <div class="section-title">Sugestão de Meta</div>
+            <span class="item-suggest" id="item-suggest"></span>
+            <div class="move-grid" id="move-list"></div>
+        </div>
+
+        <div class="section-box">
+            <div class="section-title">Estatísticas Base <span>BST</span></div>
+            <div id="stats-list"></div>
+        </div>
+
+        <div class="section-box">
+            <div class="section-title">Fraquezas e Resistências</div>
+            <div id="eff-list" style="line-height: 1.8;"></div>
+        </div>
+
+        <div class="section-box">
+            <div class="section-title">Linha Evolutiva</div>
+            <div id="evo-list" class="evo-container"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPk = null;
+    let isShiny = false;
+
+    async function buscar(nome) {
+        const query = nome || document.getElementById('pkInput').value.toLowerCase().trim();
+        if(!query) return;
+
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('mainScreen').classList.add('hidden');
+
+        try {
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${query}`);
+            if(!res.ok) throw Error();
+            currentPk = await res.json();
+            render();
+        } catch (e) {
+            alert("Pokémon não encontrado!");
+            document.getElementById('loading').classList.add('hidden');
+        }
+    }
+
+    function alternarShiny() {
+        isShiny = !isShiny;
+        render();
+    }
+
+    function toggleMoves() {
+        document.getElementById('moveset-section').classList.toggle('hidden');
+    }
+
+    async function render() {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('mainScreen').classList.remove('hidden');
+
+        document.getElementById('pk-id').innerText = `#${currentPk.id.toString().padStart(3, '0')}`;
+        document.getElementById('pk-name').innerText = currentPk.name;
+        document.getElementById('pk-image').src = isShiny ? currentPk.sprites.front_shiny : currentPk.sprites.front_default;
+
+        // Tipos
+        document.getElementById('type-container').innerHTML = currentPk.types.map(t => 
+            `<span class="type-pill ${t.type.name}">${t.type.name}</span>`
+        ).join('');
+
+        // Habilidades
+        document.getElementById('ability-list').innerHTML = currentPk.abilities.map(a => 
+            `<span style="margin-right: 10px;">• ${a.ability.name.replace('-', ' ')} ${a.is_hidden ? '<small>(Hidden)</small>' : ''}</span>`
+        ).join('');
+
+        // Status e BST
+        let bst = 0;
+        const statsHtml = currentPk.stats.map(s => {
+            bst += s.base_stat;
+            return `<div class="stat-row"><span>${s.stat.name.toUpperCase()}</span><b>${s.base_stat}</b></div>`;
+        }).join('');
+        document.getElementById('stats-list').innerHTML = statsHtml + `<div class="stat-row stat-total"><span>BST TOTAL</span><span>${bst}</span></div>`;
+
+        // Item Ideal (Lógica baseada no maior status)
+        let item = "Leftovers";
+        const highStat = [...currentPk.stats].sort((a,b) => b.base_stat - a.base_stat)[0].stat.name;
+        if(highStat === 'attack') item = "Choice Band";
+        else if(highStat === 'special-attack') item = "Choice Specs";
+        else if(highStat === 'speed') item = "Life Orb";
+        document.getElementById('item-suggest').innerText = `Item Sugerido: ${item}`;
+
+        // Moves
+        document.getElementById('move-list').innerHTML = currentPk.moves.slice(0, 4).map(m => 
+            `<div class="move-card">${m.move.name.replace('-', ' ')}</div>`
+        ).join('');
+
+        // Efetividade e Evolução
+        getEff(currentPk.types);
+        getEvo(currentPk.species.url);
+    }
+
+    async function getEff(types) {
+        const chart = {};
+        const allTypes = ["normal","fire","water","grass","electric","ice","fighting","poison","ground","flying","psychic","bug","rock","ghost","dragon","dark","steel","fairy"];
+        allTypes.forEach(t => chart[t] = 1);
+
+        for (let t of types) {
+            const data = await (await fetch(t.type.url)).json();
+            data.damage_relations.double_damage_from.forEach(type => chart[type.name] *= 2);
+            data.damage_relations.half_damage_from.forEach(type => chart[type.name] *= 0.5);
+            data.damage_relations.no_damage_from.forEach(type => chart[type.name] *= 0);
+        }
+
+        let html = "";
+        Object.entries(chart).forEach(([type, val]) => {
+            if(val === 1) return;
